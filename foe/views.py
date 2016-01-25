@@ -7,11 +7,46 @@ from .forms import *
 from .models import *
 from django.utils.text import slugify
 from django.conf import settings
-from django.http import Http404
+from django.http import Http404, HttpResponse
 
 #
 # FOE, main site
 #
+
+
+def serve_pdf(request, pdf_file_path):
+    '''Simple non-robust API to handle PDFs
+
+    Omar Trejo
+    Datata, 2015
+    '''
+    if settings.IS_PROD:
+        import cloudstorage as gcs
+        try:
+            with gcs.open(pdf_file_path, 'r') as gcs_pdf:
+                if unicode(pdf_file_path)[-3:] == 'pdf':
+                    response = HttpResponse(gcs_pdf.read(), content_type='application/pdf')
+                else:
+                    response = HttpResponse(gcs_pdf.read(), content_type='attachment')
+                response['Content-Disposition'] = 'filename=%s' % unicode(pdf_file_path)[13:]
+
+                return response
+
+            gcs_pdf.closed
+        except:
+            # TODO (otrenav): Right now I'm not sure of what
+            # errors may happen, that's why I'm raising the
+            # original exception:
+            # raise Http404("PDF doesn't exist")
+            raise
+    else:
+        # When in debug mode, send link to PDF in GCS
+        # with Google Drive Docs API for PDFs because
+        # of GCS serving issues when in local development
+        redirect_URL = 'http://docs.google.com/gview?url=https://storage.googleapis.com' + pdf_file_path + '&embedded=true'
+
+        return redirect(redirect_URL)
+
 
 if settings.IS_PROD:
     from google.appengine.ext import blobstore

@@ -1,3 +1,5 @@
+application: foe-platform
+version: prim-2016
 runtime: python27
 api_version: 1
 threadsafe: yes

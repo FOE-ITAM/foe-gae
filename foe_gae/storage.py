@@ -77,12 +77,11 @@ class GoogleCloudStorage(Storage):
         """
         Ask blobstore api for an url to directly serve the file
         """
-        key = blobstore.create_gs_key('/gs' + name)
         try:
+            key = blobstore.create_gs_key('/gs' + name)
             return images.get_serving_url(key)
         except:
-            url = reverse('view_file', args=[key])
-            return url
+            return '/PDF//f' + self.path(name)[13:]    # Corregir este parche
         
     def created_time(self, name):
         filestat = cloudstorage.stat(self.path(name))
